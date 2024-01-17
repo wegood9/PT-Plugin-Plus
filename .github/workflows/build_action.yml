@@ -1,14 +1,11 @@
 name: Build Action Release
 
 on:
-  push:
-    branches: [ dev ]
-  pull_request:
-    branches: [ dev ]
+  workflow_dispatch:
   workflow_call:
     inputs:
       ref:
-        default: 'dev'
+        default: 'dev-evo'
         type: string
       auto_update_file:
         default: 'canary.xml'
