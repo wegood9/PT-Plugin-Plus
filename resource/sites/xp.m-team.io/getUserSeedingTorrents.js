@@ -61,7 +61,6 @@
       if (this.pageInfo.count > 0) {
         return;
       }
-
       this.pageInfo.count = this.rawData.data.totalPages;
     }
 
