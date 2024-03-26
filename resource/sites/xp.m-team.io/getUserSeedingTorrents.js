@@ -7,12 +7,11 @@
       this.rawData = "";
       this.pageInfo = {
         count: 0,
-        current: 0,
-        size: 100
+        current: 0
       };
       this.result = {
-        uploads: 0,
-        uploadsSize: 0
+        seeding: 0,
+        seedingSize: 0
       };
       this.load();
     }
@@ -32,18 +31,18 @@
 
       let datas = this.rawData.data.data;
       let results = {
-        uploads: 0,
-        uploadsSize: 0
+        seeding: 0,
+        seedingSize: 0
       };
       if (datas) {
         datas.forEach(item => {
-          results.uploads++;
-          results.uploadsSize += item[0].size;
+          results.seeding++;
+          results.seedingSize += Number(item.torrent.size);
         });
       }
 
-      this.result.uploads += results.uploads;
-      this.result.uploadsSize += results.uploadsSize;
+      this.result.seeding += results.seeding;
+      this.result.seedingSize += results.seedingSize;
 
       this.pageInfo.current++;
       // 是否已到最后一页
@@ -61,7 +60,8 @@
       if (this.pageInfo.count > 0) {
         return;
       }
-      this.pageInfo.count = this.rawData.data.totalPages;
+
+      this.pageInfo.count = Number(this.rawData.data.totalPages);
     }
 
     /**
@@ -77,7 +77,8 @@
         method: "POST",
         dataType: "JSON",
         data: JSON.stringify(postData),
-        contentType: "application/json"
+        contentType: "application/json",
+        headers: this.options.rule.headers
       })
         .done(result => {
           this.rawData = result;
@@ -93,7 +94,16 @@
     }
   }
 
-  let dataURL = options.site.activeURL + options.rule.page;
+  let dataURL;
+  if (
+    options.site.activeURL.endsWith("/") &&
+    options.rule.page.startsWith("/")
+  ) {
+    // 避免拼接出双斜杆网址，馒头会报错500
+    dataURL = options.site.activeURL + options.rule.page.substr(1);
+  } else {
+    dataURL = options.site.activeURL + options.rule.page;
+  }
 
   new Parser(options, dataURL);
 })(_options, _self);
