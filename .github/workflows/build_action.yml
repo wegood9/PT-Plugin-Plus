@@ -147,7 +147,6 @@ jobs:
     name: Build Xpi (Firefox)
     runs-on: ubuntu-latest
     needs: zip
-    if: ${{ inputs.build_xpi }}
     outputs:
       exist_xpi_file: ${{ steps.addonsDeploy.outcome }}
     steps:
