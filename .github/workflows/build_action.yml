@@ -11,7 +11,7 @@ on:
         default: 'canary.xml'
         type: string
       build_xpi:
-        default: false
+        default: true
         type: boolean
     outputs:
       version:
