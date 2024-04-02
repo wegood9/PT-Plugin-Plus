@@ -1,20 +1,17 @@
 name: Build Action Release
 
 on:
-  push:
-    branches: [ dev ]
-  pull_request:
-    branches: [ dev ]
+  workflow_dispatch:
   workflow_call:
     inputs:
       ref:
-        default: 'dev'
+        default: 'dev-evo'
         type: string
       auto_update_file:
         default: 'canary.xml'
         type: string
       build_xpi:
-        default: false
+        default: true
         type: boolean
     outputs:
       version:
@@ -150,7 +147,6 @@ jobs:
     name: Build Xpi (Firefox)
     runs-on: ubuntu-latest
     needs: zip
-    if: ${{ inputs.build_xpi }}
     outputs:
       exist_xpi_file: ${{ steps.addonsDeploy.outcome }}
     steps:
