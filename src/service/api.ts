@@ -12,7 +12,7 @@ import "./favicon";
 
 let rootPath = "";
 let isExtensionMode = false;
-const isDebugMode = process.env.NODE_ENV === "development";
+const isDebugMode = import.meta.env.DEV;
 // 检测浏览器当前状态和模式
 try {
   let runtime = chrome.runtime as any;
@@ -286,7 +286,6 @@ export const APP = {
 
   /**
    * 显示系统提示信息
-   * @param options
    */
   showNotifications(
     options: chrome.notifications.NotificationOptions,
@@ -296,7 +295,7 @@ export const APP = {
   },
   getInstallType(): Promise<any> {
     return new Promise<any>((resolve?: any, reject?: any) => {
-      if (chrome && chrome.management) {
+      if (chrome?.management) {
         chrome.management.getSelf(result => {
           // 判断是否为 crx 方式
           if (
