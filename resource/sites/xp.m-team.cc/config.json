@@ -23,6 +23,7 @@
     "https://mtapi.m-team.cc/"
   ],
   "tokenRequired": true,
+  "tokenTip": "在控制台-实验室获取存取令牌",
   "formerHosts": [
     "xp.m-team.io",
     "pt.m-team.cc",
@@ -405,19 +406,35 @@
       }
     },
     "userExtendInfo": {
-      "page": "/api/member/profile",
+      "page": "/api/tracker/myPeerStatistics",
       "dataType": "json",
       "requestMethod": "POST",
       "headers": {
         "x-api-key": "$site.authToken$"
       },
       "fields": {
-        "isLogged": {
+        "seeding": {
           "selector": [
-            "message"
+            "data.seederCount"
           ],
           "filters": [
-            "(query === 'SUCCESS') ? true : false"
+            "Number(query)"
+          ]
+        },
+        "seedingSize": {
+          "selector": [
+            "data.seederSize"
+          ],
+          "filters": [
+            "Number(query)"
+          ]
+        },
+        "uploads": {
+          "selector": [
+            "data.uploadCount"
+          ],
+          "filters": [
+            "Number(query)"
           ]
         }
       }
@@ -438,47 +455,6 @@
           ],
           "filters": [
             "Number(query.finalBs)"
-          ]
-        }
-      }
-    },
-    "userSeedingTorrents": {
-      "page": "/api/member/getUserTorrentList",
-      "parser": "getUserSeedingTorrents.js",
-      "dataType": "json",
-      "requestMethod": "POST",
-      "requestContentType": "application/json",
-      "headers": {
-        "x-api-key": "$site.authToken$"
-      },
-      "requestData": {
-        "userid": "$user.id$",
-        "type": "SEEDING",
-        "pageNumber": 1,
-        "pageSize": 200
-      }
-    },
-    "userUploadedTorrents": {
-      "page": "/api/member/getUserTorrentList",
-      "dataType": "json",
-      "requestMethod": "POST",
-      "requestContentType": "application/json",
-      "headers": {
-        "x-api-key": "$site.authToken$"
-      },
-      "requestData": {
-        "userid": "$user.id$",
-        "type": "UPLOADED",
-        "pageNumber": 1,
-        "pageSize": 1
-      },
-      "fields": {
-        "uploads": {
-          "selector": [
-            "data.total"
-          ],
-          "filters": [
-            "Number(query)"
           ]
         }
       }
