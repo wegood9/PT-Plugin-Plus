@@ -403,9 +403,12 @@ export default class PTPlugin {
     // 先尝试当天
     this.options.autoRefreshUserDataNextTime = this.getNextTime(0);
     // 如果当前下次获取时间小于当前时间，则设置为第二天
-    if (new Date().getTime() >= this.options.autoRefreshUserDataNextTime) {
+    
+    if (new Date().getTime() >= this.options.autoRefreshUserDataNextTime + 60000) {
+      /*
       // 初始化时，10 秒后获取数据
       if (isInit) {
+      //if (false) {
         // 如果当天还没有获取过，就重新获取
         if (
           PPF.getToDay() !=
@@ -416,15 +419,15 @@ export default class PTPlugin {
         } else {
           this.options.autoRefreshUserDataNextTime = this.getNextTime();
         }
-      } else {
-        this.options.autoRefreshUserDataNextTime = this.getNextTime();
-      }
+      }*/
+      this.options.autoRefreshUserDataNextTime = this.getNextTime();
     }
-
+    
     this.autoRefreshUserDataTimer = window.setInterval(() => {
       this.refreshUserData()
     }, 1000);
   }
+  
 
   private refreshUserData() {
     console.log('refreshUserData')
@@ -440,6 +443,7 @@ export default class PTPlugin {
     if (
       this.options.autoRefreshUserDataNextTime &&
       time >= this.options.autoRefreshUserDataNextTime &&
+      time - this.options.autoRefreshUserDataNextTime <= 1800000 &&
       !this.autoRefreshUserDataIsWorking
     ) {
       this.options.autoRefreshUserDataNextTime = this.getNextTime();
