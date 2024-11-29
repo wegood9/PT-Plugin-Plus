@@ -9,6 +9,9 @@ import {
 import { PPF } from "./public";
 import "./favicon";
 
+// limit the number of concurrent connections to 8
+import pLimit from 'p-limit';
+const limit = pLimit(8);
 
 let rootPath = "";
 let isExtensionMode = false;
@@ -258,18 +261,29 @@ export const APP = {
    * 异步获取脚本内容
    * @param path 路径
    */
-  getScriptContent(path: string): JQueryXHR {
-    let url = `${API.host}/${path}`;
-    // 外部链接
-    if (path.substr(0, 4) === "http") {
-      url = path;
-    } else {
-      url = url.replace("resource//", "resource/");
-    }
-    APP.debugMode && console.log("getScriptContent", url);
-    return $.ajax({
-      url,
-      dataType: "text"
+  getScriptContent(path: string): Promise<string> {
+    return limit(() => {
+      return new Promise((resolve, reject) => {
+        let url = `${API.host}/${path}`;
+        // 外部链接
+        if (path.substr(0, 4) === "http") {
+          url = path;
+        } else {
+          url = url.replace("resource//", "resource/");
+        }
+        APP.debugMode && console.log("getScriptContent", url);
+        $.ajax({
+          url,
+          dataType: "text",
+          timeout: 30000 // Set timeout to 30 seconds (30000 milliseconds)
+        })
+          .done((result) => {
+            resolve(result);
+          })
+          .fail((jqXHR, status, text) => {
+            reject(status + ", " + text);
+          });
+      });
     });
   },
   /**
