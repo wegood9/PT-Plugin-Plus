@@ -2,8 +2,8 @@
   class Parser {
     constructor() {
       this.haveData = false;
-      if (/\/login/.test(options.responseText)) {
-        options.status = ESearchResultParseStatus.needLogin;
+      if (/\/auth\/login/.test(options.responseText)) {
+        options.status = ESearchResultParseStatus.needLogin; //`[${options.site.name}]需要登录后再搜索`;
         return;
       }
 
@@ -21,12 +21,12 @@
       }
       let site = options.site;
       let selector =
-        options.resultSelector || "div.table-torrents > table:first";
+        options.resultSelector || "div.table-responsive > table:first";
       let table = options.page.find(selector);
       // 获取种子列表行
       let rows = table.find("> tbody > tr");
       if (rows.length == 0) {
-        options.status = ESearchResultParseStatus.torrentTableIsEmpty;
+        options.status = ESearchResultParseStatus.torrentTableIsEmpty; //`[${options.site.name}]没有定位到种子列表，或没有相关的种子`;
         return [];
       }
       let results = [];
@@ -55,9 +55,9 @@
         // 发布人
         author: header.length - 1,
         // 分类
-        category: 1,
-        progress: 11,
-        status: 11
+        category: 0,
+        progress: null,
+        status: null
       };
 
       if (site.url.lastIndexOf("/") != site.url.length - 1) {
@@ -78,10 +78,7 @@
         }
 
         // 发布时间
-        if (
-          cell.find("a[href*='created_at']").length ||
-          cell.find("i.fa-clock").length
-        ) {
+        if (cell.find("a[href*='age']").length) {
           fieldIndex.time = index;
           fieldIndex.author =
             index == fieldIndex.author ? -1 : fieldIndex.author;
@@ -89,10 +86,7 @@
         }
 
         // 大小
-        if (
-          cell.find("a[href*='size']").length ||
-          cell.find("i.fa-file").length
-        ) {
+        if (cell.find("a[href*='size']").length) {
           fieldIndex.size = index;
           fieldIndex.author =
             index == fieldIndex.author ? -1 : fieldIndex.author;
@@ -100,10 +94,7 @@
         }
 
         // 种子数
-        if (
-          cell.find("a[href*='seed']").length ||
-          cell.find("i.fa-arrow-circle-up").length
-        ) {
+        if (cell.find("a[href*='seed']").length) {
           fieldIndex.seeders = index;
           fieldIndex.author =
             index == fieldIndex.author ? -1 : fieldIndex.author;
@@ -111,10 +102,7 @@
         }
 
         // 下载数
-        if (
-          cell.find("a[href*='leech']").length ||
-          cell.find("i.fa-arrow-circle-down").length
-        ) {
+        if (cell.find("a[href*='leech']").length) {
           fieldIndex.leechers = index;
           fieldIndex.author =
             index == fieldIndex.author ? -1 : fieldIndex.author;
@@ -122,10 +110,7 @@
         }
 
         // 完成数
-        if (
-          cell.find("a[href*='complete']").length ||
-          cell.find("i.fa-check-square").length
-        ) {
+        if (cell.find("a[href*='complete']").length) {
           fieldIndex.completed = index;
           fieldIndex.author =
             index == fieldIndex.author ? -1 : fieldIndex.author;
@@ -147,7 +132,7 @@
           const row = rows.eq(index);
           let cells = row.find(">td");
 
-          let title = row.find("a.torrent-name");
+          let title = row.find("a.torrent-filename, a.torrent-link");
           if (title.length == 0) {
             continue;
           }
@@ -157,18 +142,15 @@
           }
 
           // 获取下载链接
-          let url = row.find("a[href*='/download/']").attr("href");
-          if (url.length == 0) {
-            continue;
-          }
+          let url = row.find("a[href*='/download/torrent/']").attr("href");
 
           if (url && url.substr(0, 4) !== "http") {
             url = `${site.url}${url}`;
           }
 
           let data = {
-            title: title.text().trim(),
-            subTitle: this.getSubTitle(title, row).trim(),
+            title: title.text(),
+            subTitle: this.getSubTitle(title, row),
             link,
             url: url,
             size:
@@ -183,28 +165,28 @@
                     .eq(fieldIndex.time)
                     .find("span[title]")
                     .attr("title") ||
-                  cells.eq(fieldIndex.time).text().trim() ||
+                  cells.eq(fieldIndex.time).text() ||
                   "",
             author:
               fieldIndex.author == -1
                 ? ""
-                : cells.eq(fieldIndex.author).text().trim() || "",
+                : cells.eq(fieldIndex.author).text() || "",
             seeders:
               fieldIndex.seeders == -1
                 ? ""
-                : cells.eq(fieldIndex.seeders).text().trim() || 0,
+                : cells.eq(fieldIndex.seeders).text() || 0,
             leechers:
               fieldIndex.leechers == -1
                 ? ""
-                : cells.eq(fieldIndex.leechers).text().trim() || 0,
+                : cells.eq(fieldIndex.leechers).text() || 0,
             completed:
               fieldIndex.completed == -1
                 ? ""
-                : cells.eq(fieldIndex.completed).text().trim() || 0,
+                : cells.eq(fieldIndex.completed).text() || 0,
             comments:
               fieldIndex.comments == -1
                 ? ""
-                : cells.eq(fieldIndex.comments).text().trim() || 0,
+                : cells.eq(fieldIndex.comments).find(".tag.tag-blue").text() || 0,
             site: site,
             tags: Searcher.getRowTags(site, row),
             entryName: options.entry.name,
@@ -212,18 +194,18 @@
               fieldIndex.category == -1
                 ? null
                 : this.getCategory(cells.eq(fieldIndex.category)),
-            progress: this.getFieldValue(row, cells, fieldIndex, "progress"),
-            status: this.getFieldValue(row, cells, fieldIndex, "status")
+            progress: this.getProgress(row, "progress"),
+            status: this.getStatus(row, "status")
           };
           results.push(data);
         }
         if (results.length == 0) {
-          options.status = ESearchResultParseStatus.noTorrents;
+          options.status = ESearchResultParseStatus.noTorrents; //`[${options.site.name}]没有搜索到相关的种子`;
         }
       } catch (error) {
         console.log(error);
         options.status = ESearchResultParseStatus.parseError;
-        options.errorMsg = error.stack;
+        options.errorMsg = error.stack; //`[${options.site.name}]获取种子信息出错: ${error.stack}`;
       }
 
       return results;
@@ -237,44 +219,36 @@
     getSubTitle(title, row) {
       return "";
     }
-    
+
+    getProgress(row, fieldName, returnCell) {
+      let result  =null;
+      if(row.attr('class').indexOf('success')!=-1) result = 100;
+      else if(row.attr('class').indexOf('warning')!=-1) result = 100;
+      else if(row.attr('class').indexOf('danger')!=-1) result = 100;
+      else if(row.attr('class').indexOf('info')!=-1) result = 0;
+      return result;
+    }
+
+    getStatus(row, fieldName, returnCell) {
+      let result  =null;
+      if(row.attr('class').indexOf('success')!=-1) result = 2;
+      else if(row.attr('class').indexOf('warning')!=-1) result = 3;
+      else if(row.attr('class').indexOf('danger')!=-1) result = 3;
+      else if(row.attr('class').indexOf('info')!=-1) result = 1;
+      return result;
+    }
     /**
      * 获取分类
      * @param {*} cell 当前列
      */
     getCategory(cell) {
       let result = {
-        name: cell.find("i:first").attr("data-original-title"),
-        link: cell.find("a:first").attr("href")
+        name: cell.find("i:first").attr("title"),
+        link: ""
       };
       if (result.name) {
-        result.name = result.name.replace(" torrent", "");
+        result.name = result.name.replace(" Torrent", "");
       }
-      return result;
-    }
-    
-    getFieldValue(row, cells, fieldIndex, fieldName, returnCell) {
-      let parent = row;
-      let cell = null;
-      if (
-        cells &&
-        fieldIndex &&
-        fieldIndex[fieldName] !== undefined &&
-        fieldIndex[fieldName] !== -1
-      ) {
-        cell = cells.eq(fieldIndex[fieldName]);
-        parent = cell || row;
-      }
-
-      let result = Searcher.getFieldValue(site, parent, fieldName);
-
-      if (!result && cell) {
-        if (returnCell) {
-          return cell;
-        }
-        result = cell.text().trim();
-      }
-      if(result === "")return null;
       return result;
     }
   }
