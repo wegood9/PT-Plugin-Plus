@@ -8,5 +8,16 @@
   "tags": [ ],
   "host": "oldtoons.world",
   "levelRequirements": [],
-  "collaborator": "koal"  
+  "collaborator": "koal",
+  "selectors": {
+    "userExtendInfo": {
+      "page": "/users/$user.name$",
+      "fields": {
+        "uploads": {
+          "selector": [".panelV2 dt:contains('Total Uploads') + dd"],
+          "filters": ["(query && query.length>=2)?parseInt(query[1])+parseInt(query[1]):0"]
+        }
+      }
+    }
+  }
 }
