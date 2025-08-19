@@ -149,9 +149,11 @@ export default Vue.extend({
     } else {
       this.version = "localVersion";
     }
-    if (this.version != "localVersion") {
-      this.checkUpdate();
-    }
+  /** No More New Release
+    *if (this.version != "localVersion") {
+    *  this.checkUpdate();
+    *}
+    */
 
     APP.getInstallType()
       .then(result => {
